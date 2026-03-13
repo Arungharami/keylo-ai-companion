@@ -70,7 +70,7 @@ const SignupPage = () => {
               )}
             </div>
             <Button variant="hero" className="w-full" type="submit" disabled={loading}>
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Setting things up..." : "Let's Do This! ✨"}
             </Button>
           </form>
         </div>

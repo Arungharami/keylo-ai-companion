@@ -58,7 +58,7 @@ const LoginPage = () => {
               <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
             </div>
             <Button variant="hero" className="w-full" type="submit" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in..." : "Let's Go! 🚀"}
             </Button>
           </form>
         </div>
