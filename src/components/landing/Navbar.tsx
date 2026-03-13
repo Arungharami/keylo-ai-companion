@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import KeyloAvatar from "@/components/chat/KeyloAvatar";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -11,9 +12,7 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg gradient-bg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">K</span>
-          </div>
+          <KeyloAvatar size="sm" />
           <span className="font-bold text-lg text-foreground">Keylo.ai</span>
         </Link>
 
@@ -24,8 +23,8 @@ const Navbar = () => {
           <Link to="/login">
             <Button variant="ghost" size="sm">Log in</Button>
           </Link>
-          <Link to="/signup">
-            <Button variant="hero" size="sm">Start Chatting</Button>
+          <Link to="/app/chat?guest=true">
+            <Button variant="hero" size="sm">Try as Guest ✨</Button>
           </Link>
         </div>
 
@@ -49,8 +48,8 @@ const Navbar = () => {
               <Link to="/login" onClick={() => setOpen(false)}>
                 <Button variant="ghost" className="w-full">Log in</Button>
               </Link>
-              <Link to="/signup" onClick={() => setOpen(false)}>
-                <Button variant="hero" className="w-full">Start Chatting</Button>
+              <Link to="/app/chat?guest=true" onClick={() => setOpen(false)}>
+                <Button variant="hero" className="w-full">Try as Guest ✨</Button>
               </Link>
             </div>
           </motion.div>
