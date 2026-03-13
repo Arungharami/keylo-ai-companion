@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus, Menu, X, MessageCircle, User, CreditCard, LogOut, Crown, Trash2 } from "lucide-react";
+import { Send, Menu, MessageCircle, Crown, BookOpen, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import PaywallModal from "@/components/chat/PaywallModal";
+import GuestUpsellModal from "@/components/chat/GuestUpsellModal";
+import ChatSidebar from "@/components/chat/ChatSidebar";
+import KeyloAvatar from "@/components/chat/KeyloAvatar";
+import ModeSelector, { type ChatMode, getModeSystemPrompt } from "@/components/chat/ModeSelector";
 
 interface Message {
   id: string;
@@ -19,8 +24,57 @@ interface Conversation {
 }
 
 const FREE_LIMIT = 10;
+const GUEST_LIMIT = 3;
+
+const modeWelcome: Record<ChatMode, { title: string; subtitle: string; icon: React.ReactNode }> = {
+  chat: {
+    title: "Hey there! I'm Keylo 👋",
+    subtitle: "I'm your friendly AI companion. Ask me anything, vent, brainstorm, or just chat — I'm all ears!",
+    icon: <MessageCircle className="h-7 w-7 text-primary-foreground" />,
+  },
+  reflection: {
+    title: "Time to reflect 🌿",
+    subtitle: "Let's slow down and explore what's on your mind. I'll ask gentle questions to help you think deeper.",
+    icon: <BookOpen className="h-7 w-7 text-primary-foreground" />,
+  },
+  creative: {
+    title: "Let's get creative! ✨",
+    subtitle: "Stories, poems, wild ideas — let's make something fun together. What sparks your imagination?",
+    icon: <Sparkles className="h-7 w-7 text-primary-foreground" />,
+  },
+};
+
+const guestResponses = [
+  "That's a really interesting thought! I love how you're thinking about this. Tell me more — what's behind that feeling?",
+  "I hear you! 💛 Life has a way of throwing curveballs. If you could change one thing about that situation, what would it be?",
+  "Wow, thanks for sharing that with me. You know what I think? You're handling this better than you realize. What would help you feel more at ease right now?",
+];
+
+const authedResponses = [
+  "I really appreciate you sharing that with me! 💛 Let me think about this... What you're describing sounds like it matters a lot to you. Can you tell me more about what specifically resonates?",
+  "That's such a thoughtful observation! I love how self-aware you are. Here's what I'm noticing — it sounds like there's a deeper pattern here. What do you think drives that?",
+  "You've got great instincts on this! 🌟 I think the key insight here is about what truly energizes you. When was the last time you felt completely in your element?",
+  "I hear the passion in what you're saying! Let me reflect that back — it sounds like this connects to something you really care about. How does that feel to acknowledge?",
+  "What a wonderful question to explore together! 🎯 In my experience, the best answers come when we get curious. What would your ideal outcome look like?",
+];
+
+const reflectionPrompts = [
+  "Let's start with a gentle check-in. How are you *really* feeling right now? Not the polite answer — the real one. 🌿",
+  "That's beautifully honest. Thank you for trusting me with that. What do you think is at the root of that feeling? Take your time.",
+  "I'm noticing something powerful in what you shared. It sounds like this connects to a deeper value. What matters most to you in this situation?",
+];
+
+const creativePrompts = [
+  "Ooh, I love that idea! ✨ Let me riff on it — imagine this: what if we took that concept and turned it completely upside down? Where does your imagination go?",
+  "You're onto something brilliant! 🎨 Let me add a twist — what if the main character discovers they've been looking at everything backwards? How would that change the story?",
+  "That's giving me chills in the best way! 🌟 You have such a creative mind. Let's push even further — what's the most unexpected thing that could happen next?",
+];
 
 const ChatPage = () => {
+  const [searchParams] = useSearchParams();
+  const isGuest = searchParams.get("guest") === "true";
+  const limit = isGuest ? GUEST_LIMIT : FREE_LIMIT;
+
   const [conversations, setConversations] = useState<Conversation[]>([
     { id: "1", title: "Welcome Chat", messages: [] },
   ]);
@@ -30,43 +84,60 @@ const ChatPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messagesUsed, setMessagesUsed] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showGuestUpsell, setShowGuestUpsell] = useState(false);
   const [isPremium] = useState(false);
+  const [chatMode, setChatMode] = useState<ChatMode>("chat");
   const endRef = useRef<HTMLDivElement>(null);
 
   const active = conversations.find((c) => c.id === activeId)!;
+  const welcome = modeWelcome[chatMode];
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [active?.messages.length, loading]);
 
+  const getResponse = (msgIndex: number): string => {
+    if (chatMode === "reflection") return reflectionPrompts[msgIndex % reflectionPrompts.length];
+    if (chatMode === "creative") return creativePrompts[msgIndex % creativePrompts.length];
+    if (isGuest) return guestResponses[msgIndex % guestResponses.length];
+    return authedResponses[msgIndex % authedResponses.length];
+  };
+
   const sendMessage = () => {
     if (!input.trim() || loading) return;
-    if (!isPremium && messagesUsed >= FREE_LIMIT) {
+
+    if (isGuest && messagesUsed >= GUEST_LIMIT) {
+      setShowGuestUpsell(true);
+      return;
+    }
+    if (!isPremium && !isGuest && messagesUsed >= FREE_LIMIT) {
       setShowPaywall(true);
       return;
     }
 
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: input.trim() };
+    const msgCount = active.messages.filter(m => m.role === "user").length;
     const updated = conversations.map((c) =>
-      c.id === activeId ? { ...c, messages: [...c.messages, userMsg], title: c.messages.length === 0 ? input.trim().slice(0, 30) : c.title } : c
+      c.id === activeId
+        ? { ...c, messages: [...c.messages, userMsg], title: c.messages.length === 0 ? input.trim().slice(0, 30) : c.title }
+        : c
     );
     setConversations(updated);
     setInput("");
     setMessagesUsed((p) => p + 1);
     setLoading(true);
 
-    // Simulated AI response — will be replaced with real AI backend
     setTimeout(() => {
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Thank you for sharing that. I'm here to help you explore your thoughts and ideas. What would you like to dive deeper into?",
+        content: getResponse(msgCount),
       };
       setConversations((prev) =>
         prev.map((c) => (c.id === activeId ? { ...c, messages: [...c.messages, aiMsg] } : c))
       );
       setLoading(false);
-    }, 1500);
+    }, 1200 + Math.random() * 800);
   };
 
   const newChat = () => {
@@ -88,107 +159,71 @@ const ChatPage = () => {
     }
   };
 
+  const limitReached = isGuest ? messagesUsed >= GUEST_LIMIT : (!isPremium && messagesUsed >= FREE_LIMIT);
+
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-72 bg-card border-r border-border transform transition-transform duration-300 md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg gradient-bg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xs">K</span>
-              </div>
-              <span className="font-semibold text-foreground text-sm">Keylo.ai</span>
-            </Link>
-            <button onClick={() => setSidebarOpen(false)} className="md:hidden text-muted-foreground">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+      <ChatSidebar
+        conversations={conversations}
+        activeId={activeId}
+        isGuest={isGuest}
+        isPremium={isPremium}
+        messagesUsed={messagesUsed}
+        freeLimit={limit}
+        sidebarOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onNewChat={newChat}
+        onSelectChat={(id) => { setActiveId(id); setSidebarOpen(false); }}
+        onDeleteChat={deleteChat}
+        onShowPaywall={() => setShowPaywall(true)}
+      />
 
-          <div className="p-3">
-            <Button variant="hero-outline" className="w-full justify-start" size="sm" onClick={newChat}>
-              <Plus className="h-4 w-4 mr-2" /> New Chat
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-3 space-y-1">
-            {conversations.map((c) => (
-              <div
-                key={c.id}
-                className={`group flex items-center gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors ${c.id === activeId ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/50"}`}
-                onClick={() => { setActiveId(c.id); setSidebarOpen(false); }}
-              >
-                <MessageCircle className="h-4 w-4 shrink-0" />
-                <span className="truncate flex-1">{c.title}</span>
-                <button onClick={(e) => { e.stopPropagation(); deleteChat(c.id); }} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Usage */}
-          {!isPremium && (
-            <div className="p-3 border-t border-border">
-              <div className="glass rounded-lg p-3">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                  <span>Messages used</span>
-                  <span>{messagesUsed}/{FREE_LIMIT}</span>
-                </div>
-                <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full gradient-bg transition-all" style={{ width: `${(messagesUsed / FREE_LIMIT) * 100}%` }} />
-                </div>
-                <Button variant="hero" size="sm" className="w-full mt-3 text-xs" onClick={() => setShowPaywall(true)}>
-                  <Crown className="h-3 w-3 mr-1" /> Upgrade to Premium
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <div className="p-3 border-t border-border space-y-1">
-            <Link to="/app/account" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
-              <User className="h-4 w-4" /> Account
-            </Link>
-            <Link to="/app/billing" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
-              <CreditCard className="h-4 w-4" /> Billing
-            </Link>
-            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors w-full">
-              <LogOut className="h-4 w-4" /> Log out
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Overlay */}
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-background/60 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Main Chat */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <div className="h-14 border-b border-border flex items-center px-4 gap-3 shrink-0">
           <button onClick={() => setSidebarOpen(true)} className="md:hidden text-muted-foreground">
             <Menu className="h-5 w-5" />
           </button>
-          <MessageCircle className="h-4 w-4 text-primary" />
+          <KeyloAvatar size="sm" />
           <span className="text-sm font-medium text-foreground truncate">{active.title}</span>
-          {isPremium && (
-            <span className="ml-auto text-xs gradient-bg text-primary-foreground px-2 py-0.5 rounded-full flex items-center gap-1">
-              <Crown className="h-3 w-3" /> Premium
-            </span>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            <ModeSelector mode={chatMode} onModeChange={setChatMode} />
+            {isPremium && (
+              <span className="text-xs gradient-bg text-primary-foreground px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Crown className="h-3 w-3" /> Premium
+              </span>
+            )}
+            {isGuest && (
+              <Link to="/signup">
+                <Button variant="hero" size="sm" className="text-xs">
+                  Sign Up Free
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {active.messages.length === 0 && (
             <div className="flex-1 flex items-center justify-center h-full">
-              <div className="text-center max-w-sm">
-                <div className="h-14 w-14 rounded-2xl gradient-bg flex items-center justify-center mx-auto mb-4 animate-float">
-                  <MessageCircle className="h-7 w-7 text-primary-foreground" />
-                </div>
-                <h2 className="text-lg font-semibold text-foreground mb-2">Start a conversation</h2>
-                <p className="text-sm text-muted-foreground">Ask me anything — I'm here to chat, reflect, and explore ideas with you.</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="text-center max-w-sm"
+              >
+                <KeyloAvatar size="lg" breathing />
+                <h2 className="text-lg font-semibold text-foreground mb-2 mt-4">{welcome.title}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{welcome.subtitle}</p>
+                {isGuest && (
+                  <p className="text-xs text-primary mt-3 glass rounded-full px-4 py-1.5 inline-block">
+                    ✨ {GUEST_LIMIT} free guest messages — no sign up needed!
+                  </p>
+                )}
+              </motion.div>
             </div>
           )}
 
@@ -196,40 +231,69 @@ const ChatPage = () => {
             {active.messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-3 ${msg.role === "user" ? "gradient-bg text-primary-foreground rounded-br-md" : "bg-secondary text-secondary-foreground rounded-bl-md"}`}>
-                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                {msg.role === "assistant" && <KeyloAvatar size="sm" />}
+                <div className={`max-w-[80%] sm:max-w-[70%] rounded-2xl px-4 py-3 ${
+                  msg.role === "user"
+                    ? "gradient-bg text-primary-foreground rounded-br-md"
+                    : "bg-secondary text-secondary-foreground rounded-bl-md"
+                }`}>
+                  <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
           {loading && (
-            <div className="flex justify-start">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-2 justify-start"
+            >
+              <KeyloAvatar size="sm" breathing />
               <div className="bg-secondary rounded-2xl rounded-bl-md px-4 py-3">
-                <div className="flex gap-1">
-                  <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="flex gap-1.5">
+                  <motion.div className="h-2 w-2 rounded-full bg-primary/60" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
+                  <motion.div className="h-2 w-2 rounded-full bg-primary/60" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
+                  <motion.div className="h-2 w-2 rounded-full bg-primary/60" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
           <div ref={endRef} />
         </div>
 
         {/* Input */}
         <div className="border-t border-border p-4">
-          {!isPremium && messagesUsed >= FREE_LIMIT ? (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-3">You've used all your free messages today.</p>
-              <Button variant="hero" onClick={() => setShowPaywall(true)}>
-                <Crown className="h-4 w-4 mr-1" /> Upgrade to Premium
-              </Button>
-            </div>
+          {limitReached ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <p className="text-sm text-muted-foreground mb-3">
+                {isGuest
+                  ? "You've used your free guest chats! Sign up to keep talking with Keylo 💛"
+                  : "You've reached your free message limit for now."}
+              </p>
+              {isGuest ? (
+                <Link to="/signup">
+                  <Button variant="hero" size="lg">
+                    Create Free Account ✨
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="hero" onClick={() => setShowPaywall(true)}>
+                  <Crown className="h-4 w-4 mr-1" /> Unlock Unlimited
+                </Button>
+              )}
+            </motion.div>
           ) : (
             <form
               onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
@@ -238,19 +302,26 @@ const ChatPage = () => {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type a message..."
+                placeholder={
+                  chatMode === "reflection" ? "Share what's on your mind..." :
+                  chatMode === "creative" ? "Describe your creative idea..." :
+                  "Say something to Keylo..."
+                }
                 className="bg-secondary border-border flex-1"
                 disabled={loading}
               />
-              <Button variant="hero" size="icon" type="submit" disabled={!input.trim() || loading}>
-                <Send className="h-4 w-4" />
-              </Button>
+              <motion.div whileTap={{ scale: 0.9 }}>
+                <Button variant="hero" size="icon" type="submit" disabled={!input.trim() || loading}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </motion.div>
             </form>
           )}
         </div>
       </div>
 
       <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} />
+      <GuestUpsellModal open={showGuestUpsell} onClose={() => setShowGuestUpsell(false)} />
     </div>
   );
 };
