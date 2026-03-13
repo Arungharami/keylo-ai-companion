@@ -37,8 +37,8 @@ const SignupPage = () => {
               <span className="text-primary-foreground font-bold">K</span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
-          <p className="text-sm text-muted-foreground mt-1">Start your first conversation with Keylo</p>
+          <h1 className="text-2xl font-bold text-foreground">Join the Keylo family! 💛</h1>
+          <p className="text-sm text-muted-foreground mt-1">Create your account and start chatting in seconds</p>
         </div>
 
         <div className="glass rounded-xl p-6 shadow-card">
