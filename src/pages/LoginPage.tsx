@@ -30,8 +30,8 @@ const LoginPage = () => {
               <span className="text-primary-foreground font-bold">K</span>
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to continue your conversations</p>
+          <h1 className="text-2xl font-bold text-foreground">Welcome back! 👋</h1>
+          <p className="text-sm text-muted-foreground mt-1">Keylo missed you — let's pick up where we left off</p>
         </div>
 
         <div className="glass rounded-xl p-6 shadow-card">
