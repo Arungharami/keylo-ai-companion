@@ -1,88 +1,105 @@
 # Keylo AI Companion
 
-<p align="center">
-  <strong>AI companion web app prototype with chat, reflection, creative modes, onboarding, pricing, account, and billing flows.</strong>
-</p>
+AI companion product prototype for conversational support, reflection, creative brainstorming, onboarding, pricing, and account workflows.
 
-<p align="center">
-  <img alt="React" src="https://img.shields.io/badge/React-18-blue">
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-TypeScript-purple">
-  <img alt="Testing" src="https://img.shields.io/badge/Testing-Vitest%20%2B%20Playwright-0f766e">
-  <img alt="Product" src="https://img.shields.io/badge/Product-AI%20Companion-black">
-</p>
+![React](https://img.shields.io/badge/React-18-blue)
+![Vite](https://img.shields.io/badge/Vite-TypeScript-purple)
+![Testing](https://img.shields.io/badge/Testing-Vitest%20%2B%20Playwright-0f766e)
+![Product](https://img.shields.io/badge/Product-AI%20Companion-black)
 
----
+## Live Demo / Website / Related Links
+
+No live demo is currently published for this repository.
+
+- Repository: https://github.com/Arungharami/keylo-ai-companion
+- Lead.AI: https://www.lead-ai.us
+- GitHub: https://github.com/Arungharami
+- Hugging Face: https://huggingface.co/arun-gharami
+- Lead.AI Labs: https://huggingface.co/lead-ai-labs
+- Google Scholar: https://scholar.google.com/citations?user=uy4i5soAAAAJ&hl=en
 
 ## Overview
 
-Keylo AI Companion is a frontend product prototype for an AI companion experience. The app includes a public landing page, authentication screens, onboarding, pricing, chat modes, account pages, billing flow, and legal/contact pages.
+Keylo AI Companion is a frontend prototype for an AI companion web product. It includes a landing page, authentication screens, onboarding, pricing, companion chat, account pages, billing flow, and legal/contact pages.
 
-The current implementation uses local UI state and demo chat responses. It is structured as a product-ready frontend foundation that can later connect to real authentication, subscription, and AI backend services.
+The current implementation is a product and UI foundation. Chat behavior is simulated with local state and demo responses, so the repository should be reviewed as a frontend MVP/prototype rather than a production AI system.
 
 ## Problem Solved
 
-Many AI chat interfaces are technically functional but lack product structure around onboarding, pricing, account management, and user modes. Keylo explores how an AI companion product can support different user intents:
+Many AI chat demos focus only on the conversation window. A serious AI companion product also needs onboarding, user-mode selection, account management, free/paid usage boundaries, privacy pages, and a path toward safe backend integration.
 
-- General conversation
-- Personal reflection
-- Creative brainstorming
-- Guest/free usage limits
-- Upgrade and paywall moments
-- Account and billing management
+Keylo explores that broader product structure by combining companion chat, reflection mode, creative mode, guest usage limits, paywall concepts, and subscription-oriented screens in one React application.
 
-## Features
+## Key Features
 
 | Feature | Description |
-|---|---|
-| Landing page | Marketing/product homepage with feature, pricing, FAQ, and footer sections |
-| Chat experience | Companion-style chat interface with multiple conversation modes |
-| Reflection mode | Slower, guided prompts for self-reflection and journaling-style interaction |
-| Creative mode | Prompts oriented around imagination, writing, and idea generation |
-| Guest/free limits | Demo usage limits with upsell/paywall modal concepts |
-| Authentication screens | Login, signup, forgot password, and onboarding routes |
-| Account and billing pages | Product structure for user profile and subscription management |
-| Legal pages | Privacy, terms, refund policy, and contact page routes |
-| Testing setup | Vitest and Playwright configuration are present |
+| --- | --- |
+| Landing page | Product homepage with hero, features, how-it-works, pricing, FAQ, testimonials, and footer sections |
+| Chat interface | Companion-style chat page with conversation sidebar, local message state, and markdown rendering |
+| Chat modes | Supports chat, reflection, and creative modes through a mode selector |
+| Guest and free limits | Includes guest/free message limits with upsell and paywall modal concepts |
+| Authentication screens | Login, signup, forgot password, and onboarding routes are present |
+| Account and billing flows | Account and billing pages model a subscription product surface |
+| Legal pages | Privacy, terms, refund policy, and contact pages are included |
+| Testing foundation | Vitest, Testing Library, and Playwright configuration are present |
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Frontend | React 18, TypeScript, Vite |
 | Routing | React Router |
-| UI | Radix UI primitives, shadcn/ui-style components, Tailwind CSS |
-| State/data | React state, TanStack Query foundation |
+| UI system | Radix UI primitives, shadcn/ui-style components, Tailwind CSS |
+| State/data foundation | React state, TanStack Query |
 | Animation | Framer Motion |
-| Markdown rendering | react-markdown |
+| Markdown | react-markdown |
 | Icons | lucide-react |
 | Testing | Vitest, Testing Library, Playwright |
+| Package tooling | npm lockfile and Bun lockfiles are present |
 
-## Architecture
+## Architecture / Folder Structure
 
 ```text
 keylo-ai-companion/
-├── src/
-│   ├── App.tsx                 # App providers and route definitions
-│   ├── components/             # Shared UI, chat, landing, and navigation components
-│   ├── hooks/                  # Shared hooks
-│   ├── lib/                    # Utilities
-│   ├── pages/                  # Route-level pages
-│   └── test/                   # Test setup and examples
-├── public/                     # Static assets
-├── playwright.config.ts
-├── vitest.config.ts
-├── package.json
-└── README.md
+|-- public/
+|   |-- favicon.ico
+|   |-- placeholder.svg
+|   `-- robots.txt
+|-- src/
+|   |-- App.tsx
+|   |-- main.tsx
+|   |-- components/
+|   |   |-- chat/
+|   |   |-- landing/
+|   |   `-- ui/
+|   |-- hooks/
+|   |-- lib/
+|   |-- pages/
+|   `-- test/
+|-- package.json
+|-- vite.config.ts
+|-- vitest.config.ts
+|-- playwright.config.ts
+|-- tailwind.config.ts
+`-- README.md
 ```
+
+Important files:
+
+- `src/App.tsx` defines the application routes and shared providers.
+- `src/pages/ChatPage.tsx` contains the local companion chat experience.
+- `src/components/chat/ModeSelector.tsx` defines chat, reflection, and creative modes.
+- `src/components/landing/` contains the public marketing/product page sections.
+- `src/components/ui/` contains reusable UI components.
 
 ## Setup Instructions
 
-### Prerequisites
+Prerequisites:
 
-- Node.js 18+
+- Node.js 18 or newer
 - npm
 
-### Install
+Install dependencies:
 
 ```bash
 git clone https://github.com/Arungharami/keylo-ai-companion.git
@@ -90,93 +107,112 @@ cd keylo-ai-companion
 npm install
 ```
 
-### Run locally
+Run the local development server:
 
 ```bash
 npm run dev
 ```
 
-Vite will print the local development URL, usually:
+Vite will print the local URL, commonly:
 
 ```text
 http://localhost:5173
 ```
 
-### Build
+Build for production:
 
 ```bash
 npm run build
+```
+
+Preview the production build:
+
+```bash
 npm run preview
 ```
 
-### Test
+Run tests:
 
 ```bash
 npm run test
 ```
 
-Optional watch mode:
+Run tests in watch mode:
 
 ```bash
 npm run test:watch
 ```
 
-## Usage Instructions
+## Usage Flow
 
-Suggested product walkthrough:
-
-1. Open the landing page at `/`.
-2. Review pricing and feature sections.
-3. Try the signup or onboarding flow.
-4. Open `/app/chat` for the companion chat experience.
+1. Open `/` to review the public landing page.
+2. Visit `/pricing` to review the subscription-oriented pricing flow.
+3. Use `/signup`, `/login`, `/forgot-password`, and `/onboarding` to review account entry screens.
+4. Open `/app/chat` for the companion chat prototype.
 5. Switch between chat, reflection, and creative modes.
-6. Review account and billing pages for SaaS product structure.
+6. Trigger guest/free usage boundaries to review upsell and paywall modal behavior.
+7. Review `/app/account`, `/app/billing`, `/privacy`, `/terms`, `/refund-policy`, and `/contact` for product completeness.
 
-## Screenshots
+## Screenshots Section
 
-Add screenshots after the interface is finalized.
+Screenshots are not currently included in the repository.
 
-Suggested screenshot set:
+Recommended future screenshot paths:
 
 ```text
 assets/screenshots/
-├── landing-page.png
-├── chat-mode.png
-├── reflection-mode.png
-├── pricing.png
-└── billing.png
+|-- landing-page.png
+|-- chat-mode.png
+|-- reflection-mode.png
+|-- creative-mode.png
+|-- pricing-page.png
+`-- billing-page.png
 ```
 
-## Roadmap
+## Results / Metrics / Model Notes
 
-### Phase 1: Portfolio readiness
+This is an AI companion frontend prototype, not a trained model repository.
 
-- Replace starter README with product documentation
-- Add screenshots and demo link
-- Add repository topics
-- Clarify current demo/local-state limitations
+Current AI/model status:
 
-### Phase 2: Product integration
+- Chat responses are simulated in the frontend with local demo response arrays.
+- No production LLM provider integration is included.
+- No backend API, authentication provider, database, or payment provider is currently wired in.
+- `ModeSelector` includes mode-specific prompt concepts that can guide a future backend implementation.
 
-- Connect real authentication provider
-- Connect real LLM backend
-- Add persistent conversation history
-- Add subscription and billing provider integration
+Recommended future model/backend work:
 
-### Phase 3: Trust and safety
-
-- Add privacy-focused data handling documentation
-- Add content safety and escalation rules
-- Add user controls for deleting/exporting conversations
-- Add reliability and abuse-prevention notes
+- Add a backend route for AI provider calls.
+- Keep AI provider keys server-side.
+- Add conversation persistence only after privacy and deletion/export flows are designed.
+- Add safety handling for crisis, self-harm, abuse, and medical/legal/financial advice boundaries.
+- Add rate limiting, audit logging, and abuse prevention before public release.
 
 ## Security Notes
 
-- Do not commit API keys, `.env` files, provider tokens, payment secrets, or private user data.
-- Keep future AI provider calls behind a backend service rather than exposing private keys in the browser.
-- Treat chat transcripts as sensitive user data if persistence is added.
+- Do not expose LLM provider keys, payment secrets, auth secrets, or database credentials in the browser.
+- Use environment variables and a backend service for future AI, auth, billing, and database integrations.
+- Treat chat history as sensitive user data if persistence is added.
+- Add privacy controls for deleting and exporting user conversations before production use.
+- This repository is a prototype and should not be marketed as a production-ready mental health, medical, legal, or financial advice product.
 
-## Related Links
+## Roadmap
+
+- Add hosted demo link when available.
+- Add repository-owned screenshots.
+- Rename package metadata from the starter name to `keylo-ai-companion`.
+- Connect real authentication.
+- Add a backend AI service with server-side provider keys.
+- Add persistent conversation history with delete/export controls.
+- Connect subscription and billing provider flows.
+- Add production-grade safety, privacy, and escalation guidance.
+- Expand Playwright coverage for landing, signup, chat, pricing, and billing flows.
+
+## Author / Contact
+
+**Arun Kumar Gharami**
+
+AI Engineer | Applied Researcher | QA Automation Engineer
 
 - Lead.AI: https://www.lead-ai.us
 - GitHub: https://github.com/Arungharami
@@ -184,13 +220,6 @@ assets/screenshots/
 - Lead.AI Labs: https://huggingface.co/lead-ai-labs
 - Google Scholar: https://scholar.google.com/citations?user=uy4i5soAAAAJ&hl=en
 
-## Author
-
-**Arun Kumar Gharami**  
-AI Engineer · Applied Researcher · QA Automation Engineer
-
-Focus areas: trustworthy AI, explainable AI, AI SaaS platforms, business automation, QA automation, and applied product engineering.
-
-## License
+## License Note
 
 No license file was confirmed during this documentation pass. Add a license before external reuse, distribution, or collaboration.
